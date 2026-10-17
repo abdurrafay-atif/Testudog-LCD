@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "/Users/abdurrafayatif/Downloads/UMD 3rd-4th Year/R@M/LCD",
+      "program": "/Users/abdurrafayatif/Downloads/UMD 3rd-4th Year/R@M/LCD/build/Debug/outDebug"
+    }
+  ]
+}
