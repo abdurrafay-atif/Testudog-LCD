@@ -1,6 +1,7 @@
 wrote some code for the LCD screen
 
 * it should work except MAYBE the digits may be displayed wrong but that can be fixed via simple debugging
+
 circuitry needed:
 * extracting voltage / current from input (already covered)
 * wires to insert to all necessary pins
