@@ -102,7 +102,7 @@ void update_mode(lcd_t *lcd)
 void extract_reading(lcd_t *lcd)
 {
     // get current pin & extract value from it
-    lcd->reading = digitalRead(lcd->mode == CURRENT ? ANALOG_CURRENT : ANALOG_VOLTAGE);
+    lcd->reading = analogRead(lcd->mode == CURRENT ? ANALOG_CURRENT : ANALOG_VOLTAGE);
 }  
 
 // takes the reading and gets its digits
