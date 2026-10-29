@@ -12,10 +12,9 @@ uint8_t ANALOG_CURRENT = 15;
 uint8_t BUTTON = 12;
 
 // 7-Seg Display OUTPUTS
-uint8_t seg7[] = {2, 3, 4, 5, 6, 7, 8};
-uint8_t LED1 = 9;     // used to turn on / off MSD of output
-uint8_t LED2 = 10;    // used to turn on / off LSD of output
-uint8_t LED3 = 11;    // used for displaying mode (A = Current, V = Voltage)
+uint8_t seg7[] = {3, 4, 5, 6, 7, 8, 9};
+uint8_t LED1 = 11;  // used to turn on / off MSD of output
+uint8_t LED2 = 12;  // used to turn on / off LSD of output
 uint8_t NUM_SEGS = 7; // # of segments
 
 //////////////////
@@ -41,9 +40,8 @@ typedef struct
     uint8_t reading : 7;   // from analog to digital converter. reading around 3-6 A, or 3-6 V
     uint8_t digit1 : 4;    // extracted from reading
     uint8_t digit2 : 4;    // extracted from reading
-    uint8_t display1 : 7;  // display LED for dig1
-    uint8_t display2 : 7;  // display LED for dig2
-    uint8_t display3 : 7;  // display LED for MODE
+    uint8_t display1 : 8;  // display LED for dig1
+    uint8_t display2 : 8;  // display LED for dig2
 }
 lcd_t;
 
@@ -57,7 +55,6 @@ void setup()
     // set outputs (driver to 7-Seg display)
     pinMode(LED1, OUTPUT);
     pinMode(LED2, OUTPUT);
-    pinMode(LED3, OUTPUT);
     for(int i = 0; i < NUM_SEGS; i++)
     {
         pinMode(seg7[i], OUTPUT);
@@ -65,37 +62,27 @@ void setup()
     // ensure both output LEDs are currently off
     digitalWrite(LED1, LOW);
     digitalWrite(LED2, LOW);
-    digitalWrite(LED3, LOW);
 }
 
 // loop ensures digits are displayed on both LEDs without any issue (due to concept of multiplexing)
 void loop() 
 {
     // initialize struct
-    lcd_t lcd = {.mode = VOLTAGE, .reading = 0, .digit1 = 0, .digit2 = 0, 
-    .display1 = 0, .display2 = 0, .display3 = 0};
+    lcd_t lcd = {.mode = VOLTAGE, .reading = 0, .digit1 = 0, .digit2 = 0, .display1 = 0, .display2 = 0};
     // update reading & struct accordingly
     update_mode(&lcd);
     extract_reading(&lcd);
     get_digits_from_reading(&lcd);
     lcd.display1 = get_display_led_from_digit(lcd.digit1);
     lcd.display2 = get_display_led_from_digit(lcd.digit2);
-    lcd.display3 = get_display_led_from_mode(lcd.mode);
-    // display1 active high, other displays off
+    // display1 active high
     digitalWrite(LED1, HIGH);
     digitalWrite(LED2, LOW);
-    digitalWrite(LED3, LOW);
     update_display(lcd.display1);
-    // display2 active high, other displays off
+    // display2 active high, display1 off 
     digitalWrite(LED1, LOW);
     digitalWrite(LED2, HIGH);
-    digitalWrite(LED3, LOW);
     update_display(lcd.display2);
-    // display3 active high, other displays off
-    digitalWrite(LED1, LOW);
-    digitalWrite(LED2, LOW);
-    digitalWrite(LED3, HIGH);
-    update_display(lcd.display3);
 }
 
 ///////////////////
@@ -159,19 +146,6 @@ uint8_t get_display_led_from_digit(uint8_t digit)
     }
     // in case digit is some invalid value
     return 0b0000000;
-}
-
-uint8_t get_display_led_from_mode(lcd_mode_t mode)
-{ 
-    switch(mode)
-    {
-        case CURRENT: // display A
-          return 0b1110111;
-        case VOLTAGE: // display V (technically U but we refer to it as V)
-          return 0b0111110;
-    }
-    // in case mode is invalid (how?)
-    return 0b0000000; 
 }
 
 // updates display outputs via bit shifting on the passed in display 
