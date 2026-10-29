@@ -152,7 +152,7 @@ uint8_t get_display_led_from_digit(uint8_t digit)
 // called on a singular display
 void update_display(uint8_t display)
 {
-    for(int i = 0; i < display; i++)
+    for(int i = 0; i < NUM_SEGS; i++)
     {
         digitalWrite(seg7[i], 1 & (display >> i));
     }
