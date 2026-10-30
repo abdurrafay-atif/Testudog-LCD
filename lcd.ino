@@ -1,12 +1,16 @@
 #include <stdint.h>
+#include <INA226.h>
+#include <Wire.h>
 
 ///////////////////
 //   PIN USAGE   //
 ///////////////////
 
-// ANALOG inputs
-uint8_t ANALOG_VOLTAGE = 14;
-uint8_t ANALOG_CURRENT = 15;
+// needed to place INA in SCOPE
+INA226 INA(0x40);
+
+// RESISTOR
+uint8_t R = 100;
 
 // BUTTON input signal
 uint8_t BUTTON = 40;
@@ -48,9 +52,13 @@ lcd_t;
 // handles input / output setup
 void setup() 
 {
-    // set inputs (analog inputs, button)
-    pinMode(ANALOG_VOLTAGE, INPUT);
-    pinMode(ANALOG_CURRENT, INPUT);
+    // setup INA226 & error check
+    Wire.begin();
+    if(!INA.begin())
+    {
+        Serial.println("INA226 had an error!");
+    }
+    // set button input
     pinMode(BUTTON, INPUT);
     // set outputs (driver to 7-Seg display)
     pinMode(LED1, OUTPUT);
@@ -61,28 +69,32 @@ void setup()
     }
     // ensure both output LEDs are currently off
     digitalWrite(LED1, LOW);
-    digitalWrite(LED2, LOW);
+    digitalWrite(LED2, LOW); 
+    // infinite loop which repeatedly updates reading & updates displays accordingly
+    while(1)
+    {
+        // initialize struct
+        lcd_t lcd = {.mode = VOLTAGE, .reading = 0, .digit1 = 0, .digit2 = 0, .display1 = 0, .display2 = 0};
+        // update reading & struct accordingly
+        update_mode(&lcd);
+        extract_reading(&lcd);
+        get_digits_from_reading(&lcd);
+        lcd.display1 = get_display_led_from_digit(lcd.digit1);
+        lcd.display2 = get_display_led_from_digit(lcd.digit2);
+        // display1 active high
+        digitalWrite(LED1, HIGH);
+        digitalWrite(LED2, LOW);
+        update_display(lcd.display1);
+        // display2 active high, display1 off 
+        digitalWrite(LED1, LOW);
+        digitalWrite(LED2, HIGH);
+        update_display(lcd.display2);
+    }
 }
 
-// loop ensures digits are displayed on both LEDs without any issue (due to concept of multiplexing)
-void loop() 
+void loop()
 {
-    // initialize struct
-    lcd_t lcd = {.mode = VOLTAGE, .reading = 0, .digit1 = 0, .digit2 = 0, .display1 = 0, .display2 = 0};
-    // update reading & struct accordingly
-    update_mode(&lcd);
-    extract_reading(&lcd);
-    get_digits_from_reading(&lcd);
-    lcd.display1 = get_display_led_from_digit(lcd.digit1);
-    lcd.display2 = get_display_led_from_digit(lcd.digit2);
-    // display1 active high
-    digitalWrite(LED1, HIGH);
-    digitalWrite(LED2, LOW);
-    update_display(lcd.display1);
-    // display2 active high, display1 off 
-    digitalWrite(LED1, LOW);
-    digitalWrite(LED2, HIGH);
-    update_display(lcd.display2);
+
 }
 
 ///////////////////
@@ -96,13 +108,24 @@ void update_mode(lcd_t *lcd)
     lcd->mode = digitalRead(BUTTON) ? CURRENT : VOLTAGE;
 }
 
-// obtain necessary reading from microcontroller
-// if lcd->mode = CURRENT extract current reading
-// if lcd->mode = VOLTAGE extract voltage reading
+
+// INA266 Device Address -> 0x40
+// Bus Voltage Register -> 02h
+// Shunt Register -> 01h
+// Config Register 00h
 void extract_reading(lcd_t *lcd)
 {
-    // get current pin & extract value from it
-    lcd->reading = analogRead(lcd->mode == CURRENT ? ANALOG_CURRENT : ANALOG_VOLTAGE);
+    if(lcd->mode == CURRENT)  // mode is CURRENT
+    {
+        float voltage = INA.getBusVoltage();
+        lcd->reading = (int) voltage;
+    }
+    else                      // mode is VOLTAGE
+    {
+        float shuntVoltage = INA.getShuntVoltage();
+        float current = shuntVoltage / R;
+        lcd->reading = (int) current;
+    }
 }  
 
 // takes the reading and gets its digits
