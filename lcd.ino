@@ -9,7 +9,7 @@ uint8_t ANALOG_VOLTAGE = 14;
 uint8_t ANALOG_CURRENT = 15;
 
 // BUTTON input signal
-uint8_t BUTTON = 12;
+uint8_t BUTTON = 40;
 
 // 7-Seg Display OUTPUTS
 uint8_t seg7[] = {3, 4, 5, 6, 7, 8, 9};
@@ -124,25 +124,25 @@ uint8_t get_display_led_from_digit(uint8_t digit)
     switch(digit)
     {
         case 0:
-          return 0b1111110;
+          return ~0b1111110;
         case 1: 
-          return 0b0110000;
+          return ~0b0110000;
         case 2: 
-          return 0b1101101;
+          return ~0b1101101;
         case 3: 
-          return 0b1111001;
+          return ~0b1111001;
         case 4: 
-          return 0b0110011;
+          return ~0b0110011;
         case 5: 
-          return 0b1011011;
+          return ~0b1011011;
         case 6: 
-          return 0b1110000;
+          return ~0b1110000;
         case 7: 
-          return 0b1110000;
+          return ~0b1110000;
         case 8: 
-          return 0b1111111;
+          return ~0b1111111;
         case 9: 
-          return 0b1111011;
+          return ~0b1111011;
     }
     // in case digit is some invalid value
     return 0b0000000;
